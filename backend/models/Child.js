@@ -101,7 +101,16 @@ const childSchema = new mongoose.Schema(
         status: String,
         notes: String
       }
-    }]
+    }],
+    busAssignment: {
+      bus: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Bus'
+      },
+      assignedAt: {
+        type: Date
+      }
+    }
   },
   {
     timestamps: true

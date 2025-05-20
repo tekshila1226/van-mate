@@ -24,6 +24,7 @@ import Notifications from './parent/components/Notifications'
 import Settings from './parent/components/Settings'
 import Invoices from './parent/components/Invoices'
 import Payment from './parent/components/Payment'
+import AssignBus from './parent/components/Bus'
 
 // Driver components
 import DriverOverview from './driver/components/Overview'
@@ -70,6 +71,7 @@ export default function App() {
           <Route path="attendance" element={<AttendanceHistory />} />
           <Route path="payments" element={<Invoices />} />
           <Route path="payments/:invoiceId" element={<Payment />} />
+          <Route path="assign-bus" element={<AssignBus />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="settings" element={<Settings />} />
         </Route>

@@ -11,6 +11,7 @@ import {
   HiCog,
   HiQuestionMarkCircle
 } from 'react-icons/hi2'
+import { TbBusStop } from "react-icons/tb";
 
 export default function Sidebar({ isOpen, isMobile, closeSidebar }) {
   const navItems = [
@@ -20,6 +21,7 @@ export default function Sidebar({ isOpen, isMobile, closeSidebar }) {
     { path: "/parent/attendance", label: "Attendance", icon: "calendar" },
     { path: "/parent/payments", label: "Payments", icon: "credit-card" },
     { path: "/parent/notifications", label: "Notifications", icon: "bell" },
+    { path: "/parent/assign-bus", label: "Assign Bus", icon: "bus" },
     { path: "/parent/settings", label: "Settings", icon: "settings" }
   ];
   
@@ -38,6 +40,8 @@ export default function Sidebar({ isOpen, isMobile, closeSidebar }) {
         return <HiCreditCard className="w-5 h-5" />;
       case "bell":
         return <HiBell className="w-5 h-5" />;
+      case "bus":
+        return <TbBusStop className="w-5 h-5" />;
       case "settings":
         return <HiCog className="w-5 h-5" />;
       default:

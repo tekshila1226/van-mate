@@ -103,6 +103,8 @@ export async function register(req, res) {
       password,
       phone,
       role,
+      department,
+      schoolName,
       isActive: true
     };
 

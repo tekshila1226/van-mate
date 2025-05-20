@@ -69,7 +69,11 @@ const busSchema = new mongoose.Schema(
     },
     currentFuelLevel: {
       type: Number
-    }
+    },
+    assignedStudents: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Child'
+    }]
   },
   {
     timestamps: true

@@ -76,9 +76,9 @@ export default function DashboardLayout() {
                   <img
                     className="block h-8 w-auto"
                     src="/logo.png"
-                    alt="SchoolBus"
+                    alt="VANMATE"
                   />
-                  <span className="ml-2 text-lg font-bold text-blue-700">SchoolBus Admin</span>
+                  <span className="ml-2 text-lg font-bold text-blue-700">VANMATE Admin</span>
                 </div>
               </div>
             </div>

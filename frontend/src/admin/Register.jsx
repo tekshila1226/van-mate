@@ -20,8 +20,8 @@ export default function Register() {
     password: '',
     confirmPassword: '',
     phone: '',
-    /*schoolName: '',
-    department: '',*/
+    schoolName: '',
+    department: 'transportation',
     role: 'admin'
   });
   
@@ -72,15 +72,11 @@ export default function Register() {
     } else if (!/^\d{10}$/.test(formData.phone.replace(/[^\d]/g, ''))) {
       errors.phone = 'Please enter a valid 10-digit phone number';
     }
-/*
-    if (!formData.schoolName.trim()) {
-      errors.schoolName = 'School name is required';
-    }
-
-    if (!formData.department.trim()) {
-      errors.department = 'Department is required';
-    }
-*/   
+    
+    // if (!formData.schoolName.trim()) {
+    //   errors.schoolName = 'School name is required';
+    // }
+    
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -228,8 +224,8 @@ export default function Register() {
                       />
                       {formErrors.phone && <p className="text-sm text-red-500 mt-1">{formErrors.phone}</p>}
                     </div>
-                    {/*
-                    <div>
+                    
+                    {/* <div>
                       <label htmlFor="schoolName" className="block text-gray-700 text-sm font-medium mb-1">School Name</label>
                       <input
                         type="text"
@@ -241,22 +237,24 @@ export default function Register() {
                         placeholder="Lincoln High School"
                       />
                       {formErrors.schoolName && <p className="text-sm text-red-500 mt-1">{formErrors.schoolName}</p>}
-                    </div>
+                    </div> */}
 
                     <div>
                       <label htmlFor="department" className="block text-gray-700 text-sm font-medium mb-1">Department</label>
-                      <input
-                        type="text"
+                      <select
                         id="department"
                         name="department"
                         value={formData.department}
                         onChange={handleChange}
-                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${formErrors.department ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-100'}`}
-                        placeholder="Transportation"
-                      />
-                      {formErrors.department && <p className="text-sm text-red-500 mt-1">{formErrors.department}</p>}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100"
+                      >
+                        <option value="transportation">Transportation</option>
+                        <option value="administration">Administration</option>
+                        <option value="security">Security</option>
+                        <option value="other">Other</option>
+                      </select>
                     </div>
-                    */}
+                    
                     <div>
                       <label htmlFor="password" className="block text-gray-700 text-sm font-medium mb-1">Password</label>
                       <input

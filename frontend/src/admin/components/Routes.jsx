@@ -324,6 +324,20 @@ export default function Routes() {
                                   )}
                                 </div>
                                 <div>
+                                  <p className="font-medium">Buses:</p>
+                                  {route.buses && route.buses.length > 0 ? (
+                                    <ul className="list-disc list-inside mt-1">
+                                      {route.buses.map((bus, index) => (
+                                        <li key={index}>
+                                          {bus}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-gray-400 mt-1">No buses assigned</p>
+                                  )}
+                                </div>
+                                <div>
                                   <p className="font-medium">Actions:</p>
                                   <div className="mt-2 space-y-2">
                                     <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 w-full text-left">

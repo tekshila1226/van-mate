@@ -53,13 +53,12 @@ const routeSchema = new mongoose.Schema(
     type: {
       type: String,
       enum: ['morning', 'afternoon', 'special'],
-      required: [true, 'Route type is required']
     },
-    bus: {
+    buses: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Bus',
       required: [true, 'Bus is required for a route']
-    },
+    }],
     driver: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'

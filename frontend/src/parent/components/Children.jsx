@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { toast } from 'react-hot-toast';
-import { 
-  useGetChildrenQuery, 
-  useCreateChildMutation, 
+import {
+  useGetChildrenQuery,
+  useCreateChildMutation,
   useDeleteChildMutation,
-  useUpdateChildMutation 
+  useUpdateChildMutation
 } from '../../redux/features/childSlice';
 import { useGetActiveRoutesQuery } from '../../redux/features/routeSlice';
 import { HiPlus, HiPencil, HiTrash, HiX, HiChevronDown } from 'react-icons/hi';
@@ -18,14 +18,14 @@ export default function Children() {
   const [routeModalOpen, setRouteModalOpen] = useState(false);
   const [activeChildForRoutes, setActiveChildForRoutes] = useState(null);
   const [isUpdatingRoutes, setIsUpdatingRoutes] = useState(false);
-  
+
   // API queries
   const { data: childrenData, isLoading, isError, refetch } = useGetChildrenQuery();
   const { data: routesData, isLoading: isLoadingRoutes } = useGetActiveRoutesQuery();
   const [createChild, { isLoading: isCreating }] = useCreateChildMutation();
   const [updateChild, { isLoading: isUpdating }] = useUpdateChildMutation();
   const [deleteChild, { isLoading: isDeleting }] = useDeleteChildMutation();
-  
+
   const [newChild, setNewChild] = useState({
     firstName: '',
     lastName: '',
@@ -51,7 +51,7 @@ export default function Children() {
       details: ''
     }
   });
-  
+
   // Reset form when modal is closed
   useEffect(() => {
     if (!isModalOpen) {
@@ -88,10 +88,10 @@ export default function Children() {
     setIsEditMode(false);
     setCurrentChildId(null);
   };
-  
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     // Handle nested object properties
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
@@ -109,11 +109,11 @@ export default function Children() {
       }));
     }
   };
-  
+
   const handleRouteSelect = (e) => {
     const routeId = e.target.value;
     if (!routeId) return;
-    
+
     // Add route if it's not already in the array
     if (!newChild.routes.includes(routeId)) {
       setNewChild(prev => ({
@@ -121,18 +121,18 @@ export default function Children() {
         routes: [...prev.routes, routeId]
       }));
     }
-    
+
     // Reset the select input
     e.target.value = '';
   };
-  
+
   const handleRemoveRoute = (routeId) => {
     setNewChild(prev => ({
       ...prev,
       routes: prev.routes.filter(id => id !== routeId)
     }));
   };
-  
+
   const handleEdit = (child) => {
     // Fill the form with the selected child's data
     setNewChild({
@@ -155,49 +155,49 @@ export default function Children() {
         zipCode: child.dropoffAddress?.zipCode || ''
       },
       // Handle existing routes - could be array or single value
-      routes: Array.isArray(child.routes) 
-        ? child.routes 
+      routes: Array.isArray(child.routes)
+        ? child.routes
         : (child.route ? [child.route] : []),
       specialNeeds: {
         has: child.specialNeeds?.has || false,
         details: child.specialNeeds?.details || ''
       }
     });
-    
+
     setIsEditMode(true);
     setCurrentChildId(child._id);
     setIsModalOpen(true);
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       // Create a copy of the child object to modify before submission
       const childToSubmit = { ...newChild };
-      
+
       if (isEditMode) {
         await updateChild({
           id: currentChildId,
           ...childToSubmit
         }).unwrap();
-        
+
         toast.success("Child updated successfully!");
       } else {
         await createChild(childToSubmit).unwrap();
-        
+
         toast.success("Child added successfully!");
       }
-      
+
       // Close form
       setIsModalOpen(false);
-      
+
     } catch (error) {
       console.error(isEditMode ? "Failed to update child:" : "Failed to add child:", error);
       toast.error(error.data?.message || (isEditMode ? "Failed to update child. Please try again." : "Failed to add child. Please try again."));
     }
   };
-  
+
   const handleRemove = async (id) => {
     if (window.confirm("Are you sure you want to remove this child?")) {
       try {
@@ -209,14 +209,14 @@ export default function Children() {
       }
     }
   };
-  
+
   // Open route management modal for a specific child with most current data
   const openRouteModal = (child) => {
     // Make a deep copy to avoid reference issues
-    setActiveChildForRoutes({...child});
+    setActiveChildForRoutes({ ...child });
     setRouteModalOpen(true);
   };
-  
+
   // Update child's routes directly from the card
   const updateChildRoutes = async (childId, routes) => {
     setIsUpdatingRoutes(true);
@@ -225,12 +225,12 @@ export default function Children() {
         id: childId,
         routes
       }).unwrap();
-      
+
       // Force refetch children data to get updated routes
       await refetch();
-      
+
       toast.success("Bus routes updated successfully!");
-      
+
     } catch (error) {
       console.error("Failed to update bus routes:", error);
       toast.error(error.data?.message || "Failed to update bus routes. Please try again.");
@@ -240,15 +240,15 @@ export default function Children() {
       setActiveChildForRoutes(null);
     }
   };
-  
+
   // Add a route to child from the card view modal
   const addRouteToChild = (routeId) => {
     if (!activeChildForRoutes || !routeId || routeId === "") return;
-    
-    const currentRoutes = Array.isArray(activeChildForRoutes.routes) 
+
+    const currentRoutes = Array.isArray(activeChildForRoutes.routes)
       ? [...activeChildForRoutes.routes] // Create a copy to avoid mutation 
       : (activeChildForRoutes.route ? [activeChildForRoutes.route] : []);
-      
+
     if (!currentRoutes.includes(routeId)) {
       // Update local state first for immediate UI feedback
       const updatedRoutes = [...currentRoutes, routeId];
@@ -260,34 +260,34 @@ export default function Children() {
       }));
 
       console.log("Updated routes:", updatedRoutes);
-      
+
       // Then update in database
       updateChildRoutes(activeChildForRoutes._id, updatedRoutes);
     } else {
       toast.info("This route is already assigned to the child");
     }
-    
+
     // Reset the select input
     document.querySelector('[aria-label="Add route"]').value = "";
   };
-  
+
   // Remove a route from child 
   const removeRouteFromChild = (childId, routeId) => {
     if (!childId || !routeId) return;
-    
+
     // Find the active child if we're working with it
-    const child = activeChildForRoutes && activeChildForRoutes._id === childId 
-      ? activeChildForRoutes 
+    const child = activeChildForRoutes && activeChildForRoutes._id === childId
+      ? activeChildForRoutes
       : childrenData?.data?.find(c => c._id === childId);
-      
+
     if (!child) return;
-    
-    const currentRoutes = Array.isArray(child.routes) 
+
+    const currentRoutes = Array.isArray(child.routes)
       ? [...child.routes] // Create a copy
       : (child.route ? [child.route] : []);
-      
+
     const updatedRoutes = currentRoutes.filter(id => id !== routeId);
-    
+
     // If we're in the modal, update the local state first
     if (activeChildForRoutes && activeChildForRoutes._id === childId) {
       setActiveChildForRoutes(prev => ({
@@ -296,7 +296,7 @@ export default function Children() {
         route: undefined
       }));
     }
-    
+
     // Then update in database
     updateChildRoutes(childId, updatedRoutes);
   };
@@ -313,14 +313,14 @@ export default function Children() {
     const birthDate = new Date(dateOfBirth);
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
-    
+
     return age;
   };
-  
+
   // Get route name by ID for display
   const getRouteName = (routeId) => {
     if (!routesData?.data) return 'Loading...';
@@ -341,20 +341,20 @@ export default function Children() {
           Add Child
         </button>
       </div>
-      
+
       {isLoading && (
         <div className="text-center py-10">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
           <p className="mt-2 text-gray-600">Loading children...</p>
         </div>
       )}
-      
+
       {isError && (
         <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
           <p>Failed to load children. Please try again later.</p>
         </div>
       )}
-      
+
       {isModalOpen && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -365,14 +365,14 @@ export default function Children() {
             <h2 className="text-lg font-semibold text-gray-800">
               {isEditMode ? 'Edit Child' : 'Add New Child'}
             </h2>
-            <button 
+            <button
               onClick={() => setIsModalOpen(false)}
               className="text-gray-500 hover:text-gray-700"
             >
               <HiX className="w-5 h-5" />
             </button>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Personal Information */}
@@ -408,6 +408,12 @@ export default function Children() {
                   name="dateOfBirth"
                   value={newChild.dateOfBirth}
                   onChange={handleChange}
+                  min={(() => {
+                    const eighteenYearsAgo = new Date();
+                    eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+                    return eighteenYearsAgo.toISOString().split('T')[0];
+                  })()}
+                  max={new Date().toISOString().split('T')[0]}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300"
                   required
                 />
@@ -428,7 +434,7 @@ export default function Children() {
                   <option value="other">Other</option>
                 </select>
               </div>
-              
+
               {/* School Information */}
               <div>
                 <label htmlFor="schoolName" className="block text-gray-700 text-sm font-medium mb-1">School*</label>
@@ -454,7 +460,7 @@ export default function Children() {
                   required
                 />
               </div>
-              
+
               {/* Pickup Address */}
               <div className="col-span-2">
                 <h3 className="font-medium text-gray-700 mb-2">Pickup Address</h3>
@@ -501,7 +507,7 @@ export default function Children() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Bus Routes - Modified to support multiple routes */}
               <div className="col-span-2">
                 <label htmlFor="routes" className="block text-gray-700 text-sm font-medium mb-1">Bus Routes</label>
@@ -520,7 +526,7 @@ export default function Children() {
                   ))}
                 </select>
                 {isLoadingRoutes && <p className="text-xs text-gray-500 mt-1">Loading routes...</p>}
-                
+
                 {/* Display selected routes with remove option */}
                 {newChild.routes.length > 0 && (
                   <div className="mt-2 space-y-2">
@@ -529,7 +535,7 @@ export default function Children() {
                       {newChild.routes.map(routeId => (
                         <div key={routeId} className="flex items-center bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm">
                           <span>{getRouteName(routeId)}</span>
-                          <button 
+                          <button
                             type="button"
                             onClick={() => handleRemoveRoute(routeId)}
                             className="ml-2 text-indigo-500 hover:text-indigo-700"
@@ -542,7 +548,7 @@ export default function Children() {
                   </div>
                 )}
               </div>
-              
+
               {/* Special Needs Checkbox */}
               <div className="col-span-2">
                 <div className="flex items-center mb-2">
@@ -558,7 +564,7 @@ export default function Children() {
                     Child has special needs
                   </label>
                 </div>
-                
+
                 {newChild.specialNeeds.has && (
                   <textarea
                     name="specialNeeds.details"
@@ -571,7 +577,7 @@ export default function Children() {
                 )}
               </div>
             </div>
-            
+
             <div className="pt-4 flex justify-end space-x-3">
               <button
                 type="button"
@@ -599,7 +605,7 @@ export default function Children() {
           </form>
         </motion.div>
       )}
-      
+
       {/* Route management modal */}
       {routeModalOpen && activeChildForRoutes && (
         <motion.div
@@ -607,7 +613,7 @@ export default function Children() {
           animate={{ opacity: 1 }}
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
         >
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             className="bg-white rounded-xl p-6 max-w-md w-full"
@@ -616,7 +622,7 @@ export default function Children() {
               <h3 className="text-lg font-semibold">
                 Manage Bus Routes - {activeChildForRoutes.firstName}
               </h3>
-              <button 
+              <button
                 onClick={() => {
                   if (!isUpdatingRoutes) {
                     setRouteModalOpen(false);
@@ -629,7 +635,7 @@ export default function Children() {
                 <HiX className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-medium mb-2">Add Route</label>
               <select
@@ -642,12 +648,12 @@ export default function Children() {
                 <option value="">-- Select a route to add --</option>
                 {routesData?.data?.map(route => {
                   // Don't show routes that are already assigned
-                  const currentRoutes = Array.isArray(activeChildForRoutes.routes) 
-                    ? activeChildForRoutes.routes 
+                  const currentRoutes = Array.isArray(activeChildForRoutes.routes)
+                    ? activeChildForRoutes.routes
                     : (activeChildForRoutes.route ? [activeChildForRoutes.route] : []);
-                
+
                   if (currentRoutes.includes(route._id)) return null;
-                
+
                   return (
                     <option key={route._id} value={route._id}>
                       {route.name} ({route.type === 'morning' ? 'Morning' : 'Afternoon'} - {route.school})
@@ -656,7 +662,7 @@ export default function Children() {
                 })}
               </select>
             </div>
-            
+
             <div>
               <label className="block text-gray-700 text-sm font-medium mb-2">Current Routes</label>
               {isUpdatingRoutes && (
@@ -665,7 +671,7 @@ export default function Children() {
                   <p className="ml-2 text-sm text-gray-600">Updating routes...</p>
                 </div>
               )}
-              
+
               {!isUpdatingRoutes && Array.isArray(activeChildForRoutes.routes) && activeChildForRoutes.routes.length > 0 ? (
                 <div className="space-y-2">
                   {activeChildForRoutes.routes.map(routeId => (
@@ -696,7 +702,7 @@ export default function Children() {
                 <p className="text-gray-500 italic">No routes assigned</p>
               ) : null}
             </div>
-            
+
             <div className="mt-6 flex justify-end">
               <button
                 onClick={() => {
@@ -714,7 +720,7 @@ export default function Children() {
           </motion.div>
         </motion.div>
       )}
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {!isLoading && childrenData?.data && childrenData.data.map(child => (
           <motion.div
@@ -737,7 +743,7 @@ export default function Children() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <p className="text-gray-500">Date of Birth</p>
@@ -753,7 +759,7 @@ export default function Children() {
                     {child.pickupAddress?.street} {child.pickupAddress?.city}, {child.pickupAddress?.state} {child.pickupAddress?.zipCode}
                   </p>
                 </div>
-                
+
                 {/* Bus Routes Section */}
                 <div className="bg-gray-50 p-3 rounded-lg col-span-2">
                   <div className="flex items-center justify-between">
@@ -787,13 +793,13 @@ export default function Children() {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="bg-gray-50 p-3 rounded-lg flex items-center justify-between">
                   <div>
                     <p className="text-gray-500">Actions</p>
                   </div>
                   <div className="flex space-x-2">
-                    <button 
+                    <button
                       onClick={() => handleRemove(child._id)}
                       className="p-1 text-red-500 hover:bg-red-50 rounded"
                       title="Remove child"
@@ -801,7 +807,7 @@ export default function Children() {
                     >
                       <HiTrash className="w-4 h-4" />
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleEdit(child)}
                       className="p-1 text-blue-500 hover:bg-blue-50 rounded"
                       title="Edit child"
@@ -822,7 +828,7 @@ export default function Children() {
           </motion.div>
         ))}
       </div>
-      
+
       {!isLoading && (!childrenData?.data || childrenData.data.length === 0) && (
         <div className="bg-white p-10 rounded-xl shadow-sm border border-gray-200 text-center">
           <div className="text-gray-400 mb-4">

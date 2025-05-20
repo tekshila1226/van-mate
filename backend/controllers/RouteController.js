@@ -5,7 +5,7 @@ import Child from '../models/Child.js';
 // Get all active routes
 export async function getActiveRoutes(req, res) {
   try {
-    const routes = await Route.find({ isActive: true }).select('_id routeNumber name');
+    const routes = await Route.find({ isActive: true });
     
     res.status(200).json({
       success: true,
@@ -172,7 +172,7 @@ export async function createRoute(req, res) {
   try {
     const { 
       name, routeNumber, type, school, description, 
-      stops, startDate, isActive, driver, bus 
+      stops, startDate, isActive, driver, buses 
     } = req.body;
 
     // Validate required fields
@@ -192,7 +192,7 @@ export async function createRoute(req, res) {
       });
     }
 
-    // Create route
+    // Create route with multiple buses
     const route = await Route.create({
       name,
       routeNumber,
@@ -200,7 +200,7 @@ export async function createRoute(req, res) {
       school,
       description,
       stops,
-      bus,
+      buses: buses || [], // Use the buses array instead of single bus
       startDate: startDate || new Date(),
       isActive: isActive !== undefined ? isActive : true,
       driver: driver || null

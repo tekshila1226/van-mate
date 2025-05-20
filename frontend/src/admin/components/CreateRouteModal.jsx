@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { useCreateRouteMutation } from '../../redux/features/routeSlice';
 import { useGetAllBusesQuery } from '../../redux/features/busSlice';
 import Spinner from './Spinner';
+import { HiX } from 'react-icons/hi';
 
 export default function CreateRouteModal({ onClose }) {
   const [createRoute, { isLoading }] = useCreateRouteMutation();
@@ -15,8 +16,7 @@ export default function CreateRouteModal({ onClose }) {
     type: 'morning',
     school: '',
     description: '',
-    bus: '', // Added bus field
-    stops: [{ 
+    stops: [{
       name: '',
       address: '',
       arrivalTime: '',
@@ -27,11 +27,12 @@ export default function CreateRouteModal({ onClose }) {
   });
 
   const [errors, setErrors] = useState({});
+  const [selectedBuses, setSelectedBuses] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // Clear error when user types
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -40,19 +41,19 @@ export default function CreateRouteModal({ onClose }) {
 
   const handleStopChange = (index, field, value) => {
     const newStops = [...formData.stops];
-    
+
     if (field === 'latitude' || field === 'longitude') {
       newStops[index].coordinates[field] = value;
     } else {
       newStops[index][field] = value;
     }
-    
+
     setFormData(prev => ({ ...prev, stops: newStops }));
   };
 
   const addStop = () => {
     const newStops = [...formData.stops];
-    newStops.push({ 
+    newStops.push({
       name: '',
       address: '',
       arrivalTime: '',
@@ -68,24 +69,38 @@ export default function CreateRouteModal({ onClose }) {
       toast.error("Route must have at least one stop");
       return;
     }
-    
+
     const newStops = formData.stops.filter((_, i) => i !== index);
     // Update sequences
     newStops.forEach((stop, i) => {
       stop.sequence = i + 1;
     });
-    
+
     setFormData(prev => ({ ...prev, stops: newStops }));
+  };
+
+  const handleBusSelect = (busId) => {
+    if (!selectedBuses.includes(busId)) {
+      setSelectedBuses([...selectedBuses, busId]);
+    }
+  };
+
+  const handleRemoveBus = (busId) => {
+    setSelectedBuses(selectedBuses.filter(id => id !== busId));
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.name.trim()) newErrors.name = 'Route name is required';
     if (!formData.routeNumber.trim()) newErrors.routeNumber = 'Route number is required';
     if (!formData.school.trim()) newErrors.school = 'School name is required';
-    if (!formData.bus) newErrors.bus = 'Bus is required'; // Added bus validation
-    
+
+    // Check the selectedBuses array instead
+    if (selectedBuses.length === 0) {
+      newErrors.buses = 'At least one bus must be assigned to the route';
+    }
+
     // Validate stops
     const stopErrors = formData.stops.map(stop => {
       const errors = {};
@@ -93,33 +108,34 @@ export default function CreateRouteModal({ onClose }) {
       if (!stop.address.trim()) errors.address = 'Address is required';
       if (!stop.arrivalTime) errors.arrivalTime = 'Arrival time is required';
       if (!stop.departureTime) errors.departureTime = 'Departure time is required';
-      
+
       return Object.keys(errors).length > 0 ? errors : null;
     });
-    
+
     if (stopErrors.some(error => error !== null)) {
       newErrors.stops = stopErrors;
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error('Please fix the errors in the form');
       return;
     }
-    
+
     try {
       await createRoute({
         ...formData,
+        buses: selectedBuses, // This is the only buses field we need
         startDate: new Date(),
         isActive: true
       }).unwrap();
-      
+
       toast.success('Route created successfully');
       onClose();
     } catch (error) {
@@ -136,7 +152,7 @@ export default function CreateRouteModal({ onClose }) {
         className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-xl"
       >
         <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Route</h3>
-        
+
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
@@ -146,13 +162,12 @@ export default function CreateRouteModal({ onClose }) {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                  errors.name ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.name ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+                  }`}
               />
               {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Route Number</label>
               <input
@@ -160,9 +175,8 @@ export default function CreateRouteModal({ onClose }) {
                 name="routeNumber"
                 value={formData.routeNumber}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                  errors.routeNumber ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.routeNumber ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+                  }`}
               />
               {errors.routeNumber && <p className="text-red-500 text-xs mt-1">{errors.routeNumber}</p>}
             </div>
@@ -188,16 +202,17 @@ export default function CreateRouteModal({ onClose }) {
                 name="school"
                 value={formData.school}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                  errors.school ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.school ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+                  }`}
               />
               {errors.school && <p className="text-red-500 text-xs mt-1">{errors.school}</p>}
             </div>
 
-            {/* Added Bus Selection */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Bus</label>
+            {/* Bus selection section */}
+            <div className="mb-6 md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Buses <span className="text-red-500">*</span>
+              </label>
               {busesLoading ? (
                 <div className="p-2 flex justify-center">
                   <Spinner size="small" />
@@ -208,14 +223,12 @@ export default function CreateRouteModal({ onClose }) {
                 </div>
               ) : (
                 <select
-                  name="bus"
-                  value={formData.bus}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                    errors.bus ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
-                  }`}
+                  onChange={(e) => handleBusSelect(e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.buses ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+                    }`}
+                  defaultValue=""
                 >
-                  <option value="">Select a bus</option>
+                  <option value="">-- Select buses to assign --</option>
                   {busesData?.data?.map(bus => (
                     <option key={bus._id} value={bus._id}>
                       {bus.busNumber} - {bus.make} {bus.model} ({bus.capacity} seats)
@@ -223,7 +236,30 @@ export default function CreateRouteModal({ onClose }) {
                   ))}
                 </select>
               )}
-              {errors.bus && <p className="text-red-500 text-xs mt-1">{errors.bus}</p>}
+              {errors.buses && <p className="text-red-500 text-xs mt-1">{errors.buses}</p>}
+
+              {selectedBuses.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-sm font-medium text-gray-700">Selected Buses:</p>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {selectedBuses.map(busId => {
+                      const bus = busesData?.data?.find(b => b._id === busId);
+                      return (
+                        <div key={busId} className="flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
+                          <span>{bus?.busNumber || busId}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveBus(busId)}
+                            className="ml-2 text-blue-500 hover:text-blue-700"
+                          >
+                            <HiX className="w-4 h-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="md:col-span-2">
@@ -237,7 +273,7 @@ export default function CreateRouteModal({ onClose }) {
               />
             </div>
           </div>
-          
+
           {/* Stops Section */}
           <div className="mb-6">
             <div className="flex justify-between items-center mb-3">
@@ -250,7 +286,7 @@ export default function CreateRouteModal({ onClose }) {
                 + Add Stop
               </button>
             </div>
-            
+
             <div className="space-y-4">
               {formData.stops.map((stop, index) => (
                 <div key={index} className="border border-gray-200 rounded-md p-4 bg-gray-50">
@@ -264,7 +300,7 @@ export default function CreateRouteModal({ onClose }) {
                       Remove
                     </button>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">Stop Name</label>
@@ -272,52 +308,48 @@ export default function CreateRouteModal({ onClose }) {
                         type="text"
                         value={stop.name}
                         onChange={(e) => handleStopChange(index, 'name', e.target.value)}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                          errors.stops && errors.stops[index]?.name ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
-                        }`}
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.stops && errors.stops[index]?.name ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+                          }`}
                       />
                       {errors.stops && errors.stops[index]?.name && <p className="text-red-500 text-xs mt-1">{errors.stops[index].name}</p>}
                     </div>
-                    
+
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">Address</label>
                       <input
                         type="text"
                         value={stop.address}
                         onChange={(e) => handleStopChange(index, 'address', e.target.value)}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                          errors.stops && errors.stops[index]?.address ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
-                        }`}
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.stops && errors.stops[index]?.address ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+                          }`}
                       />
                       {errors.stops && errors.stops[index]?.address && <p className="text-red-500 text-xs mt-1">{errors.stops[index].address}</p>}
                     </div>
-                    
+
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">Arrival Time</label>
                       <input
                         type="time"
                         value={stop.arrivalTime}
                         onChange={(e) => handleStopChange(index, 'arrivalTime', e.target.value)}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                          errors.stops && errors.stops[index]?.arrivalTime ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
-                        }`}
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.stops && errors.stops[index]?.arrivalTime ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+                          }`}
                       />
                       {errors.stops && errors.stops[index]?.arrivalTime && <p className="text-red-500 text-xs mt-1">{errors.stops[index].arrivalTime}</p>}
                     </div>
-                    
+
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">Departure Time</label>
                       <input
                         type="time"
                         value={stop.departureTime}
                         onChange={(e) => handleStopChange(index, 'departureTime', e.target.value)}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                          errors.stops && errors.stops[index]?.departureTime ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
-                        }`}
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.stops && errors.stops[index]?.departureTime ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+                          }`}
                       />
                       {errors.stops && errors.stops[index]?.departureTime && <p className="text-red-500 text-xs mt-1">{errors.stops[index].departureTime}</p>}
                     </div>
-                    
+
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">Latitude</label>
                       <input
@@ -328,7 +360,7 @@ export default function CreateRouteModal({ onClose }) {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">Longitude</label>
                       <input
@@ -344,7 +376,7 @@ export default function CreateRouteModal({ onClose }) {
               ))}
             </div>
           </div>
-          
+
           <div className="flex justify-end space-x-3 mt-6">
             <button
               type="button"

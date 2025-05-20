@@ -1,6 +1,7 @@
 import Child from '../models/Child.js';
 import Route from '../models/Route.js';
 import User from '../models/User.js';
+import Bus from '../models/Bus.js';
 
 // Get all children for the logged-in parent
 export async function getChildren(req, res) {
@@ -155,6 +156,27 @@ export async function updateChild(req, res) {
       new: true,
       runValidators: true
     });
+    
+    // Handle bus assignment
+    if (req.body.busAssignment) {
+      // First remove child from any previous bus
+      if (child.busAssignment && child.busAssignment.bus) {
+        await Bus.findByIdAndUpdate(
+          child.busAssignment.bus,
+          { $pull: { assignedStudents: child._id } }
+        );
+      }
+
+      // Assign to new bus
+      if (req.body.busAssignment.bus) {
+        await Bus.findByIdAndUpdate(
+          req.body.busAssignment.bus,
+          { $addToSet: { assignedStudents: child._id } }
+        );
+      }
+
+      child.busAssignment = req.body.busAssignment;
+    }
     
     res.status(200).json({
       success: true,

@@ -19,7 +19,7 @@ router.use(protect);
 router.get('/driver', authorize('driver'), getDriverBuses);
 
 // Admin routes
-router.get('/', authorize('admin'), getAllBuses);
+router.get('/', authorize('admin', 'parent'), getAllBuses);
 router.get('/available', authorize('admin'), getAvailableBuses);
 router.get('/:id', authorize('admin'), getBusById);
 router.post('/', authorize('admin'), createBus);
