@@ -37,7 +37,7 @@ app.use('/api/tracking', trackingRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/buses', busRoutes); // Then add this line where you register other routes
-app.use('/api/notifications', notificationRoutes); // Add this with your other app.use statements
+app.use('/api/notifications', notificationRoutes); // Add this with other app.use statements
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

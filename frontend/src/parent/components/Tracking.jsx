@@ -9,9 +9,9 @@ import { HiMail } from 'react-icons/hi';
 
 export default function Tracking() {
   const [selectedChildId, setSelectedChildId] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);    //loading state for bus location
   const [busLocation, setBusLocation] = useState(null);
-  const [travelHistory, setTravelHistory] = useState([]);
+  const [travelHistory, setTravelHistory] = useState([]);   //Stores events such as pickups, drop-offs, and emergencies
   
   // Fetch children from API
   const { data: childrenData, isLoading: isLoadingChildren } = useGetChildrenQuery();
